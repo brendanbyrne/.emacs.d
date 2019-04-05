@@ -15,6 +15,9 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package use-package-ensure-system-package
+  :ensure t)
+
 ;; stop creating ~files
 (setq make-backup-files nil)
 
@@ -73,37 +76,33 @@
 	:hook (prog-mode . lsp)
   :config (setq lsp-prefer-flymake nil))
 
-;; (use-package lsp-ui)
+(use-package lsp-ui)
 (use-package company-lsp)
-;; (use-package projectile)
-;; (use-package ccls
-;;   :after projectile
-;;   :ensure-system-package ccls
-;;   :custom
-;;   (ccls-args nil)
-;;   (ccls-executable (executable-find "ccls"))
-;;   (projectile-project-root-files-top-down-recurring
-;;    (append '("compile_commands.json" ".ccls")
-;;            projectile-project-root-files-top-down-recurring))
-;;   :config (push ".ccls-cache" projectile-globally-ignored-directories))
+(use-package ccls
+  :after projectile
+  :ensure-system-package ccls
+  :custom
+  (ccls-args nil)
+  (ccls-executable (executable-find "ccls"))
+  (projectile-project-root-files-top-down-recurring
+   (append '("compile_commands.json" ".ccls")
+           projectile-project-root-files-top-down-recurring))
+  :config (push ".ccls-cache" projectile-globally-ignored-directories))
 
-;; (use-package google-c-style
-;;   :hook ((c-mode c++-mode) . google-set-c-style)
-;;          (c-mode-common . google-make-newline-indent))
+(use-package google-c-style
+  :hook ((c-mode c++-mode) . google-set-c-style)
+         (c-mode-common . google-make-newline-indent))
 
 ;; Bind clang-format to Control-Meta-tab
-;; (load "/usr/share/clang/clang-format.el")
-;; (global-set-key [C-M-tab] 'clang-format-region)
-
-;; C++ syntax highlighter
-;; (use-package modern-cpp-font-lock)
+(load "/usr/share/clang/clang-format.el")
+(global-set-key [C-M-tab] 'clang-format-region)
 
 ;; =============================================================================
 ;; Docker
 ;; =============================================================================
 
-;; (use-package dockerfile-mode
-;;   :mode "Dockerfile\\'")
+(use-package dockerfile-mode
+  :mode "Dockerfile\\'")
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
