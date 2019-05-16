@@ -61,7 +61,7 @@
 
 ;; Turn off mouse centric UI elements
 (when window-system
-	(menu-bar-mode -1)    ; Disable the menu bar
+  (menu-bar-mode -1)    ; Disable the menu bar
   (scroll-bar-mode -1)  ; Disable the scroll bar
   (tool-bar-mode -1)    ; Disable the tool bar
   (tooltip-mode -1))    ; Disable the tooltips
@@ -83,7 +83,7 @@
 (use-package company)
 
 (use-package lsp-mode
-	:hook (prog-mode . lsp)
+  :hook (prog-mode . lsp)
   :config (setq lsp-prefer-flymake nil))
 
 (use-package lsp-ui)
@@ -105,21 +105,31 @@
 
 ;; Bind clang-format to Control-Meta-tab
 (load "/usr/share/clang/clang-format.el")
-(global-set-key [C-M-tab] 'clang-format-region)
+(global-set-key [C-M-tab] 'clang-format-buffer)
 
 ;; =============================================================================
 ;; CMake
 ;; =============================================================================
 
 (use-package cmake-mode
-	:config
-	(setq auto-mode-alist
+  :config
+  (setq auto-mode-alist
       (append
        '(("CMakeLists\\.txt\\'" . cmake-mode))
        '(("\\.cmake\\'" . cmake-mode))
        auto-mode-alist))
-	(add-hook 'cmake-mode-hook (lambda () (setq indent-tabs-mode nil)))
+  (add-hook 'cmake-mode-hook (lambda () (setq indent-tabs-mode nil)))
 )
+
+;; =============================================================================
+;; Python
+;; =============================================================================
+
+(setq auto-mode-alist (append '(("\\.asl" . python-mode)
+                                ("BUILD" . python-mode)
+                                ("\\.wafl" . python-mode)
+                                ) auto-mode-alist))
+(add-hook 'python-mode-hook (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
 
 ;; =============================================================================
 ;; Docker
