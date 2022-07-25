@@ -109,7 +109,7 @@
   :init (which-key-mode)
   :diminish which-key-mode
   :config
-  (setq which-key-idle-delay 0.3))
+  (setq which-key-idle-delay 0.1))
 
 (use-package counsel
   :bind (("M-x" . counsel-M-x) ;; alt-o when using M-x to see extra options
@@ -157,5 +157,19 @@
   ("<right>" next-buffer "next"))
 
 ;; ========================================================================
-;; Productivity
+;; Project Management
 ;; ========================================================================
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/")
+    (setq projectile-project-search-path '("~/")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
