@@ -171,5 +171,8 @@
     (setq projectile-project-search-path '("~/")))
   (setq projectile-switch-project-action #'projectile-dired))
 
+;; Better  Ivy / Counsel integration
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
+
+(use-package magit)
