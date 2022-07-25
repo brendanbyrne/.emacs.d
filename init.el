@@ -1,156 +1,161 @@
+;; =========================================================================
+;; Setup use-package
+;; =========================================================================
+
+;; Initialize package sources
 (require 'package)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+			 ("org" . "https://orgmode.org/elpa/")
+			 ("elpa" . "https://elpa.gnu.org/packages/")))
+
 (package-initialize)
 
-;; =============================================================================
-;; everything below in an org file?
-;; =============================================================================
+;;Don't attempt to load archive if it already exists
+(unless package-archive-contents
+  (package-refresh-contents))
 
-;; where to look for package updates
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("melpa" . "http://melpa.org/packages/")
-                         ("org" . "http://orgmode.org/elpa/")))
-
-;; Setup use-package if I don't already have it
+;; Initialize use-package on non-Linux
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
-(use-package use-package-ensure-system-package
-  :ensure t)
+(require 'use-package)
+(setq use-package-always-ensure t)
 
-;; stop creating ~files
-(setq make-backup-files nil)
-
-;; =============================================================================
+;; =========================================================================
 ;; Look and feel
-;; =============================================================================
+;; =========================================================================
+(setq inhibit-startup-message t)
 
-;; default values
-(setq-default
- ad-redefinition-action 'accept                 ; Silence warnings for redefinition
- column-number-mode 1                           ; Show the column number
- cursor-in-non-selected-windows t               ; Hide the cursor in inactive windows
- display-time-default-load-average nil          ; Don't display load average
- fill-column 80                                 ; Set width for automatic line breaks
- help-window-select t                           ; Focus new help windows when opened
- inhibit-startup-screen t                       ; Disable start-up screen
- initial-scratch-message ""                     ; Empty the initial *scratch* buffer
- load-prefer-newer t                            ; Prefers the newest version of a file
- make-backup-files nil                          ; Don't create ~FileName
- mouse-wheel-scroll-amount '(1 ((shift) . 1))   ; Scroll one line at a time
- mouse-wheel-progressive-speed nil              ; Disable mouse scroll wheel acceleration
- scroll-conservatively most-positive-fixnum     ; Always scroll by one line
- scroll-set 1                                   ; Keyboard scroll one line at a time
- select-enable-clipboard t                      ; Merge system's and Emacs' clipboard
- tab-width 2                                    ; Set width for tabs
- use-package-always-ensure t                    ; Avoid the :ensure keyword for each package
- user-full-name "Brendan Byrne"                 ; Set the full name of the current user
- user-mail-address "brendan.c.byrne@gmail.com"  ; Set the email address of the current user
- vc-follow-symlinks t                           ; Always follow the symlinks
- view-read-only t)                              ; Always open read-only buffers in view-mode
-(cd "~/")                                       ; Move to the user directory
-(display-time-mode 1)                           ; Enable time in the mode-line
-(global-hl-line-mode)                           ; Hightlight current line
-(set-default-coding-systems 'utf-8)             ; Default to utf-8 encoding
-(show-paren-mode 1)                             ; Show the parent
+;; Minimal IU
+(scroll-bar-mode -1)   ; Disable visible scrollbar
+(tool-bar-mode -1)     ; Disable the toolbar
+(tooltip-mode -1)      ; Disable tooltips
+(set-fringe-mode 10)   ; Add a boarder around the window
+(menu-bar-mode -1)     ; Disable the menu bar
 
-;; Zenburn color theme
-(use-package zenburn-theme
+;; Display line number
+(column-number-mode)
+(global-display-line-numbers-mode t)
+
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		shell-mode-hook
+		eshell-mode-hook))
+  (add-hook mode (lambda() (display-line-numbers-mode 0))))
+
+(setq make-backup-files nil) ; Turn off ~Filename
+
+(setq visible-bell t)  ; Use visible bells instead of audio ones
+
+;; Note: Must Come before doom-modeline
+;;
+;; Note: First time on new machine, must run M-x all-the-icons-install-fonts
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :commands all-the-icons-install-fonts
+  :init
+  (unless (find-font (font-spec :name "all-the-icons"))
+    (all-the-icons-install-fonts t)))
+
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+;; use the escape key to quit
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Doom theme
+(use-package doom-themes
+  :config (load-theme 'doom-zenburn t))
+
+;; Doom modeline
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :custom ((doom-modeline-height 15)))
+
+
+;; Rainbow delimiters
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; Better minibuffer menus
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)	
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
   :config
-  (load-theme 'zenburn t))
+  (ivy-mode 1))
 
-;; Turn off mouse centric UI elements
-(when window-system
-  (menu-bar-mode -1)    ; Disable the menu bar
-  (scroll-bar-mode -1)  ; Disable the scroll bar
-  (tool-bar-mode -1)    ; Disable the tool bar
-  (tooltip-mode -1))    ; Disable the tooltips
+;; Switch buffers by hitting C-M-j then using the arrow keys
+(global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
 
-;; =============================================================================
-;; C++
-;; =============================================================================
+;; Shows what the possible key combinations are
+;; Activates and `which-key-idle-delay` seconds
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 0.3))
 
-;; config c++-mode
-(setq auto-mode-alist (append '(("\\.cc" . c++-mode)
-                                ("\\.inl" . c++-mode)
-                                ("\\.hh$" . c++-mode)
-                               ) auto-mode-alist))
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-(add-hook 'c++-mode-hook
-          (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
+(use-package counsel
+  :bind (("M-x" . counsel-M-x) ;; alt-o when using M-x to see extra options
+	 ("C-x b" . counsel-ibuffer)
+	 ("C-x C-f" . counsel-find-file)
+	 :map minibuffer-local-map
+	 ("C-r" . 'counsel-minibuffer-history)))
 
-(use-package flycheck)
-(use-package company)
+(use-package ivy-rich
+  :init (ivy-rich-mode 1))
 
-(use-package lsp-mode
-  :hook (prog-mode . lsp)
-  :config (setq lsp-prefer-flymake nil))
-
-(use-package lsp-ui)
-(use-package company-lsp)
-(use-package ccls
-  :after projectile
-  :ensure-system-package ccls
+;; Replace default help programs
+(use-package helpful
   :custom
-  (ccls-args nil)
-  (ccls-executable (executable-find "ccls"))
-  (projectile-project-root-files-top-down-recurring
-   (append '("compile_commands.json" ".ccls")
-           projectile-project-root-files-top-down-recurring))
-  :config (push ".ccls-cache" projectile-globally-ignored-directories))
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
 
-(use-package google-c-style
-  :hook ((c-mode c++-mode) . google-set-c-style)
-         (c-mode-common . google-make-newline-indent))
+;; write customize interface settings out to custom.el
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
 
-;; Bind clang-format to Control-Meta-tab
-(load "/usr/share/clang/clang-format.el")
-(global-set-key [C-M-tab] 'clang-format-buffer)
+;; I don't know how to get general to work
+;; (use-package general)
 
-;; =============================================================================
-;; CMake
-;; =============================================================================
+;; ========================================================================
+;; Hydra
+;; ========================================================================
+(use-package hydra)
+;; hydra command for navigating windows
+(defhydra hydra-navigate-windows (global-map "C-f")
+  "navigate"
+  ("<left>" windmove-left "left")
+  ("<right>" windmove-right "right")
+  ("<up>" windmove-up "up")
+  ("<down>" windmove-down "down"))
+;; hydra command for scrolling buffers
+(defhydra hydra-switch-buffers (global-map "C-x")
+  "buffer"
+  ("<left>" previous-buffer "prev")
+  ("<right>" next-buffer "next"))
 
-(use-package cmake-mode
-  :config
-  (setq auto-mode-alist
-      (append
-       '(("CMakeLists\\.txt\\'" . cmake-mode))
-       '(("\\.cmake\\'" . cmake-mode))
-       auto-mode-alist))
-  (add-hook 'cmake-mode-hook (lambda () (setq indent-tabs-mode nil)))
-)
-
-;; =============================================================================
-;; Python
-;; =============================================================================
-
-(setq auto-mode-alist (append '(("\\.asl" . python-mode)
-                                ("BUILD" . python-mode)
-                                ("\\.wafl" . python-mode)
-                                ) auto-mode-alist))
-(add-hook 'python-mode-hook (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
-
-;; =============================================================================
-;; Docker
-;; =============================================================================
-
-(use-package dockerfile-mode
-  :mode "Dockerfile\\'")
-
-;; =============================================================================
-;; Autogenerated code
-;; =============================================================================
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages '(zenburn-theme use-package)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; ========================================================================
+;; Productivity
+;; ========================================================================
