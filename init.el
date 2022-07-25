@@ -176,3 +176,34 @@
   :config (counsel-projectile-mode))
 
 (use-package magit)
+
+;; ========================================================================
+;; Programming Languages
+;; ========================================================================
+
+;; config c++-mode
+(setq auto-mode-alist (append '(("\\.cc" . c++-mode)
+                                ("\\.inl" . c++-mode)
+                                ("\\.hh$" . c++-mode)
+                               ) auto-mode-alist))
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'c++-mode-hook
+          (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
+
+(use-package google-c-style
+  :hook ((c-mode c++-mode) . google-set-c-style)
+         (c-mode-common . google-make-newline-indent))
+
+;; Bind clang-format to Control-Meta-tab
+(load "/usr/share/clang/clang-format.el")
+(global-set-key [C-M-tab] 'clang-format-buffer)
+
+;; Python
+(setq auto-mode-alist (append '(("\\.asl" . python-mode)
+                                ("BUILD" . python-mode)
+                                ("\\.wafl" . python-mode)
+                                ) auto-mode-alist))
+(add-hook 'python-mode-hook (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
+
+;; Docker
+(use-package dockerfile-mode :mode "Dockerfile\\'")
