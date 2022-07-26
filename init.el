@@ -5,9 +5,10 @@
 ;; Initialize package sources
 (require 'package)
 
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-			 ("org" . "https://orgmode.org/elpa/")
-			 ("elpa" . "https://elpa.gnu.org/packages/")))
+(setq package-archives
+      '(("melpa" . "https://melpa.org/packages/")
+	("org" . "https://orgmode.org/elpa/")
+	("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
 
@@ -21,6 +22,31 @@
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+;; =========================================================================
+;; Daemon support
+;; =========================================================================
+;; Enables pulling environment variables from user space
+;;  Use `exec-path-from-shell-getenv` to do this
+(use-package exec-path-from-shell)
+
+;; =========================================================================
+;; Font Configuration
+;; =========================================================================
+;; Input font is from https://input.djr.com/ provided under non-commerical license
+(defvar fcb/default-font-size 180)
+(defvar fcb/fixed-pitch-font "Input Mono")
+(defvar fcb/variable-pitch-font "Input Sans")
+(defvar fcb/default-font fcb/fixed-pitch-font)
+
+;; Default font
+(set-face-attribute 'default nil :font fcb/default-font :height fcb/default-font-size)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font fcb/fixed-pitch-font :height fcb/default-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font fcb/variable-pitch-font :height fcb/default-font-size :weight 'regular)
 
 ;; =========================================================================
 ;; Look and feel
@@ -76,17 +102,16 @@
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
 
-
 ;; Rainbow delimiters
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
-;; Better minibuffer menus
+;; Better minibuffer menu layout
 (use-package ivy
   :diminish
   :bind (("C-s" . swiper)
          :map ivy-minibuffer-map
-         ("TAB" . ivy-alt-done)	
+         ("TAB" . ivy-alt-done)
          ("C-l" . ivy-alt-done)
          ("C-j" . ivy-next-line)
          ("C-k" . ivy-previous-line)
@@ -143,15 +168,17 @@
 ;; Hydra
 ;; ========================================================================
 (use-package hydra)
+
 ;; hydra command for navigating windows
-(defhydra hydra-navigate-windows (global-map "C-f")
+(defhydra fcb/hydra-navigate-windows (global-map "C-f")
   "navigate"
   ("<left>" windmove-left "left")
   ("<right>" windmove-right "right")
   ("<up>" windmove-up "up")
   ("<down>" windmove-down "down"))
+
 ;; hydra command for scrolling buffers
-(defhydra hydra-switch-buffers (global-map "C-x")
+(defhydra fcb/hydra-switch-buffers (global-map "C-x")
   "buffer"
   ("<left>" previous-buffer "prev")
   ("<right>" next-buffer "next"))
@@ -178,11 +205,22 @@
 (use-package magit)
 
 ;; ========================================================================
+;; Tramp
+;; ========================================================================
+(setq tramp-default-method "ssh")
+
+;; This makes projectile better with tramp
+(defadvice projectile-project-root (around ignore-remote first activate)
+    (unless (file-remote-p default-directory) ad-do-it))
+
+;; ========================================================================
 ;; Programming Languages
 ;; ========================================================================
 
 ;; config c++-mode
 (setq auto-mode-alist (append '(("\\.cc" . c++-mode)
+				("\\.cu" . c++-mode)
+				("\\.cuh" . c++-mode)
                                 ("\\.inl" . c++-mode)
                                 ("\\.hh$" . c++-mode)
                                ) auto-mode-alist))
@@ -195,15 +233,85 @@
          (c-mode-common . google-make-newline-indent))
 
 ;; Bind clang-format to Control-Meta-tab
-(load "/usr/share/clang/clang-format.el")
+(load (exec-path-from-shell-getenv "CLANG_FORMAT_EL_PATH"))
 (global-set-key [C-M-tab] 'clang-format-buffer)
 
 ;; Python
+(require 'python-mode)
 (setq auto-mode-alist (append '(("\\.asl" . python-mode)
-                                ("BUILD" . python-mode)
+				("\\.bzl" . python-mode)
+                                ("\\.sadl" . python-mode)
                                 ("\\.wafl" . python-mode)
+				("BUILD" . python-mode)
+				("WORKSPACE" . python-mode)
                                 ) auto-mode-alist))
 (add-hook 'python-mode-hook (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
 
 ;; Docker
 (use-package dockerfile-mode :mode "Dockerfile\\'")
+
+(use-package yaml-mode
+  :config
+  (setq auto-mode-alist (append '(("\\.yaml" . yaml-move)))))
+
+;; ;; Adoc, Do I even need this?
+;; (use-package adoc-mode
+;;   :config
+;;   (setq auto-mode-alist (append '(("\\.txt" . adoc-mode)
+;;                                   ("\\.adoc" . adoc-mode)
+;;                                   ) auto-mode-alist)))
+;;  (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t))))
+
+;; ========================================================================
+;; Org Mode
+;; ========================================================================
+(defun fcb/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1))
+
+(defun fcb/org-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.2)
+                  (org-level-2 . 1.1)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.0)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :font fcb/variable-pitch-font :weight 'regular :height (cdr face)))
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+
+(use-package org
+  :hook (org-mode . fcb/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▾")
+  (fcb/org-font-setup))
+
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+(defun fcb/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . fcb/org-mode-visual-fill))
