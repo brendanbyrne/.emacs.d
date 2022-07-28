@@ -1,6 +1,8 @@
 *~
-/elpa/
+elpa/
 projectile-bookmarks.eld
-/transient/
+transient/
 tramp
-/eln-cache/
+eln-cache/
+session.*
+eshell/
