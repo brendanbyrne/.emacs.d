@@ -250,17 +250,14 @@
 ;; Docker
 (use-package dockerfile-mode :mode "Dockerfile\\'")
 
-(use-package yaml-mode
-  :config
-  (setq auto-mode-alist (append '(("\\.yaml" . yaml-move)))))
+(use-package yaml-mode)
 
-;; ;; Adoc, Do I even need this?
-;; (use-package adoc-mode
-;;   :config
-;;   (setq auto-mode-alist (append '(("\\.txt" . adoc-mode)
-;;                                   ("\\.adoc" . adoc-mode)
-;;                                   ) auto-mode-alist)))
-;;  (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t))))
+;; Rust
+(use-package rust-mode
+  :config
+  (setq rust-format-on-save t))
+
+(use-package yaml-mode)
 
 ;; ========================================================================
 ;; Org Mode
