@@ -250,13 +250,12 @@
 ;; Docker
 (use-package dockerfile-mode :mode "Dockerfile\\'")
 
-(use-package yaml-mode)
-
 ;; Rust
 (use-package rust-mode
   :config
   (setq rust-format-on-save t))
 
+;; Yaml
 (use-package yaml-mode)
 
 ;; ========================================================================
