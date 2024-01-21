@@ -6,7 +6,7 @@
  '(custom-safe-themes
    '("333958c446e920f5c350c4b4016908c130c3b46d590af91e1e7e2a0611f1e8c5" default))
  '(package-selected-packages
-   '(rust-mode exec-path-from-shell yaml-mode visual-fill-column org-bullets adoc-mode dockerfile-mode google-c-style magit counsel-projectile projectile hydra general doom-themes helpful ivy-rich which-key rainbow-delimiters ivy use-package)))
+   '(python-mode protobuf-mode ligature flatbuffers-mode rust-mode exec-path-from-shell yaml-mode visual-fill-column org-bullets adoc-mode dockerfile-mode google-c-style magit counsel-projectile projectile hydra general doom-themes helpful ivy-rich which-key rainbow-delimiters ivy use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
