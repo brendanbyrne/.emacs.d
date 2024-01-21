@@ -1,6 +1,6 @@
-;; =========================================================================
+;; ========================================================================
 ;; Setup use-package
-;; =========================================================================
+;; ========================================================================
 
 ;; Initialize package sources
 (require 'package)
@@ -12,7 +12,7 @@
 
 (package-initialize)
 
-;;Don't attempt to load archive if it already exists
+;;Don't attempt to load archaive if it already exists
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -23,20 +23,21 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-;; =========================================================================
+;; ========================================================================
 ;; Daemon support
-;; =========================================================================
+;; ========================================================================
 ;; Enables pulling environment variables from user space
 ;;  Use `exec-path-from-shell-getenv` to do this
 (use-package exec-path-from-shell)
 
-;; =========================================================================
+;; ========================================================================
 ;; Font Configuration
-;; =========================================================================
+;; ========================================================================
 ;; Input font is from https://input.djr.com/ provided under non-commerical license
-(defvar fcb/default-font-size 180)
-(defvar fcb/fixed-pitch-font "Input Mono")
-(defvar fcb/variable-pitch-font "Input Sans")
+(defvar fcb/default-font-size 100)
+(defvar fcb/fixed-pitch-font "JetBrains Mono")
+;; (defvar fcb/variable-pitch-font "Input Sans")
+(defvar fcb/variable-pitch-font fcb/fixed-pitch-font)
 (defvar fcb/default-font fcb/fixed-pitch-font)
 
 ;; Default font
@@ -48,10 +49,18 @@
 ;; Set the variable pitch face
 (set-face-attribute 'variable-pitch nil :font fcb/variable-pitch-font :height fcb/default-font-size :weight 'regular)
 
-;; =========================================================================
+;; ========================================================================
+;; Mac settings
+;; ========================================================================
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'none)
+
+;; ========================================================================
 ;; Look and feel
-;; =========================================================================
+;; ========================================================================
 (setq inhibit-startup-message t)
+
+(put 'upcase-region 'disabled nil)
 
 ;; Minimal IU
 (scroll-bar-mode -1)   ; Disable visible scrollbar
@@ -164,6 +173,8 @@
 ;; I don't know how to get general to work
 ;; (use-package general)
 
+(use-package flatbuffers-mode)
+
 ;; ========================================================================
 ;; Hydra
 ;; ========================================================================
@@ -233,11 +244,12 @@
          (c-mode-common . google-make-newline-indent))
 
 ;; Bind clang-format to Control-Meta-tab
-(load (exec-path-from-shell-getenv "CLANG_FORMAT_EL_PATH"))
-(global-set-key [C-M-tab] 'clang-format-buffer)
+;; (load (exec-path-from-shell-getenv "CLANG_FORMAT_EL_PATH"))
+;; (global-set-key [C-M-tab] 'clang-format-buffer)
 
 ;; Python
-(require 'python-mode)
+;; (require 'python-mode)
+(use-package python-mode)
 (setq auto-mode-alist (append '(("\\.asl" . python-mode)
 				("\\.bzl" . python-mode)
                                 ("\\.sadl" . python-mode)
@@ -311,3 +323,38 @@
 
 (use-package visual-fill-column
   :hook (org-mode . fcb/org-mode-visual-fill))
+
+;; ========================================================================
+;; Ligatures support
+;; ========================================================================
+(use-package ligature
+  :config
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable all Cascadia Code ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/=" "<=" ">="
+				       "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!" "??" "???" "?:"
+				       "?." "?=" "<:" ":<" ":>" ">:" "<:<" "<>" "<<<" ">>>" "<<"
+				       ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||=" "##" "###" "####"
+				       "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#=" "^=" "<$>"
+				       "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</" "</>" "/>"
+				       "<!--" "<#--" "-->" "->" "->>" "<<-" "<-" "<=<" "=<<" "<<="
+				       "<==" "<=>" "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-"
+				       "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->" "<<~"
+				       "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]" "|]"
+				       "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||" "|||>" "<|||"
+				       "<|>" "..." ".." ".=" "..<" ".?" "::" ":::" ":=" "::=" ":?"
+				       ":?>" "//" "///" "/*" "*/" "/=" "//=" "/==" "@_" "__" "???"
+				       ";;;"))
+
+  ;; Enables ligature checks globally in all buffers. You can also do it
+  ;; per mode with `ligature-mode'.
+  (global-ligature-mode t))
+
+;; ========================================================================
+;; Protobuf support
+;; ========================================================================
+(use-package protobuf-mode)
